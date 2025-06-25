@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { Column, Row, TableData } from '../types/index.ts';
+import type { Column, Row, TableData } from '../types';
 
 export function generateMockTableData(rowCount = 100): TableData {
   const columns: Column[] = [
