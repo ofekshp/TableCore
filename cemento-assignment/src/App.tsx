@@ -1,11 +1,16 @@
-
-import './App.css'
+import { useState } from 'react';
+import { generateMockTableData } from './utils/generateMockData';
+import type { TableData } from './types';
 
 function App() {
+  const [tableData, setTableData] = useState<TableData>(() => generateMockTableData(200));
+
   return (
-    <div className="text-center p-8">
-      <h1 className="text-4xl font-bold text-blue-500">Tailwind is working! 🎉</h1>
-      <p className="mt-4 text-lg text-gray-600">Let's build this assignment!</p>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4 text-blue-600">Mock Data Loaded </h1>
+      <pre className="text-xs bg-gray-100 p-4 rounded overflow-auto max-h-[60vh]">
+        {JSON.stringify(tableData, null, 2)}
+      </pre>
     </div>
   );
 }
