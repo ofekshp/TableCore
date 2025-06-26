@@ -1,46 +1,24 @@
-import { useState } from 'react';
-import type { Column, Row } from '../types';
-import EditRowPanel from './EditRowPanel';
+import type { Column, Row } from "../types";
 
 type DataTableProps = {
   columns: Column[];
   data: Row[];
+  onRowDoubleClick?: (row: Row) => void;
 };
 
-export const DataTable = ({ columns, data }: DataTableProps) => {
-  const [tableData, setTableData] = useState<Row[]>(data);
-  const [editingRow, setEditingRow] = useState<Row | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleSave = (updatedRow: Row) => {
-  const updatedData = tableData.map(row =>
-    row.id === updatedRow.id ? updatedRow : row
-  );
-
-  setTableData(updatedData);
-  setEditingRow(null);
-  setShowSuccess(true);
-  setTimeout(() => setShowSuccess(false), 3000);
-
-  // Save to sessionStorage so it's preserved on refresh
-  const updatedTable = { columns, data: updatedData };
-  sessionStorage.setItem('tableData', JSON.stringify(updatedTable));
-};
-
-
-  const handleCancel = () => {
-    setEditingRow(null);
-  };
-
+export const DataTable = ({
+  columns,
+  data,
+  onRowDoubleClick,
+}: DataTableProps) => {
   const renderCellValue = (value: any, column: Column) => {
-    if (column.type === 'boolean') {
+    if (column.type === "boolean") {
       return value ? (
         <span className="text-green-600 font-bold">✅</span>
       ) : (
         <span className="text-red-500 font-bold">❌</span>
       );
     }
-
     return String(value);
   };
 
@@ -62,10 +40,10 @@ export const DataTable = ({ columns, data }: DataTableProps) => {
         </thead>
 
         <tbody>
-          {tableData.map((row) => (
+          {data.map((row) => (
             <tr
               key={row.id}
-              onDoubleClick={() => setEditingRow(row)}
+              onDoubleClick={() => onRowDoubleClick?.(row)}
               className="even:bg-gray-50 cursor-pointer hover:bg-blue-50"
             >
               {columns.map((column) => (
@@ -80,22 +58,6 @@ export const DataTable = ({ columns, data }: DataTableProps) => {
           ))}
         </tbody>
       </table>
-
-      {editingRow && (
-        <EditRowPanel
-          row={editingRow}
-          columns={columns}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      )}
-
-      {showSuccess && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-full shadow-lg shadow-green-300 animate-fadeIn z-50">
-          Data changed successfully
-        </div>
-      )}  
-
     </div>
   );
 };

@@ -1,17 +1,18 @@
-import { faker } from '@faker-js/faker';
-import type { Column, Row, TableData } from '../types';
+import { faker } from "@faker-js/faker";
+import type { Column, Row, TableData } from "../types";
 
-export function generateMockData(rowCount = 100): TableData { // Generates mock data for a table with specified number of rows
+export function generateMockData(rowCount = 100): TableData {
+  // Generates mock data for a table with specified number of rows
   const columns: Column[] = [
-    { id: 'name', ordinalNo: 1, title: 'Name', type: 'string' },
-    { id: 'age', ordinalNo: 2, title: 'Age', type: 'number' },
-    { id: 'isActive', ordinalNo: 3, title: 'Active', type: 'boolean' },
+    { id: "name", ordinalNo: 1, title: "Name", type: "string" },
+    { id: "age", ordinalNo: 2, title: "Age", type: "number" },
+    { id: "isActive", ordinalNo: 3, title: "Active", type: "boolean" },
     {
-      id: 'role',
+      id: "role",
       ordinalNo: 4,
-      title: 'Role',
-      type: 'select',
-      options: ['User', 'Admin', 'Guest'],
+      title: "Role",
+      type: "select",
+      options: ["User", "Admin", "Guest"],
     },
   ];
 
@@ -20,7 +21,7 @@ export function generateMockData(rowCount = 100): TableData { // Generates mock 
     name: faker.person.fullName(),
     age: faker.number.int({ min: 18, max: 65 }),
     isActive: faker.datatype.boolean(),
-    role: faker.helpers.arrayElement(['User', 'Admin', 'Guest']),
+    role: faker.helpers.arrayElement(["User", "Admin", "Guest"]),
   }));
 
   return { columns, data };

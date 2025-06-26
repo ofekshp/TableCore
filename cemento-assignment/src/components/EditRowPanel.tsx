@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { Column, Row } from '../types';
+import React, { useState } from "react";
+import type { Column, Row } from "../types";
 
 type EditRowPanelProps = {
   row: Row;
@@ -8,46 +8,53 @@ type EditRowPanelProps = {
   onCancel: () => void;
 };
 
-const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCancel }) => {
+const EditRowPanel: React.FC<EditRowPanelProps> = ({
+  row,
+  columns,
+  onSave,
+  onCancel,
+}) => {
   const [editedRow, setEditedRow] = useState<Row>({ ...row });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (columnId: string, value: any) => {
-    setEditedRow(prev => ({ ...prev, [columnId]: value }));
-    setErrors(prev => ({ ...prev, [columnId]: '' }));
+    setEditedRow((prev) => ({ ...prev, [columnId]: value }));
+    setErrors((prev) => ({ ...prev, [columnId]: "" }));
   };
 
-    const validate = (): boolean => {
+  const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     columns.forEach((col) => {
-        const val = editedRow[col.id];
+      const val = editedRow[col.id];
 
-        if (col.type === 'string' && (!val || val.trim() === '')) {
-        newErrors[col.id] = 'This field is required';
-        }
+      if (col.type === "string" && (!val || val.trim() === "")) {
+        newErrors[col.id] = "This field is required";
+      }
 
-        if (col.type === 'number') {
-        if (val === '' || val === null || isNaN(val)) {
-            newErrors[col.id] = 'This field is required';
+      if (col.type === "number") {
+        if (val === "" || val === null || isNaN(val)) {
+          newErrors[col.id] = "This field is required";
         } else if (val < 1) {
-            newErrors[col.id] = 'Must be at least 1';
+          newErrors[col.id] = "Must be at least 1";
         }
-            }
-        });
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-    };
-
+  };
 
   const handleSave = () => {
     if (!validate()) return;
 
     const cleanedRow: Row = { ...editedRow };
 
-    columns.forEach(col => {
-      if (col.type === 'number' && (cleanedRow[col.id] === '' || cleanedRow[col.id] === null)) {
+    columns.forEach((col) => {
+      if (
+        col.type === "number" &&
+        (cleanedRow[col.id] === "" || cleanedRow[col.id] === null)
+      ) {
         cleanedRow[col.id] = 0;
       }
     });
@@ -59,7 +66,7 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCan
     const value = editedRow[column.id];
 
     switch (column.type) {
-      case 'string':
+      case "string":
         return (
           <input
             type="text"
@@ -68,20 +75,20 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCan
             className="w-full border px-3 py-2 rounded"
           />
         );
-      case 'number':
+      case "number":
         return (
-            <input
+          <input
             type="number"
-            value={value === 0 ? '' : value}
+            value={value === 0 ? "" : value}
             onChange={(e) => {
-                const raw = e.target.value;
-                handleChange(column.id, raw === '' ? '' : Number(raw));
+              const raw = e.target.value;
+              handleChange(column.id, raw === "" ? "" : Number(raw));
             }}
             className="w-full border px-3 py-2 rounded"
-            />
+          />
         );
 
-      case 'boolean':
+      case "boolean":
         return (
           <input
             type="checkbox"
@@ -89,7 +96,7 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCan
             onChange={(e) => handleChange(column.id, e.target.checked)}
           />
         );
-      case 'select':
+      case "select":
         return (
           <select
             value={value}
@@ -97,7 +104,9 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCan
             className="w-full border px-3 py-2 rounded"
           >
             {column.options?.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
             ))}
           </select>
         );
@@ -108,11 +117,15 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({ row, columns, onSave, onCan
 
   return (
     <div className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 bg-white border shadow-xl p-6 rounded-lg w-[400px] space-y-4">
-      {columns.map(column => (
+      {columns.map((column) => (
         <div key={column.id}>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">{column.title}</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            {column.title}
+          </label>
           {renderInput(column)}
-          {errors[column.id] && <p className="text-red-500 text-xs">{errors[column.id]}</p>}
+          {errors[column.id] && (
+            <p className="text-red-500 text-xs">{errors[column.id]}</p>
+          )}
         </div>
       ))}
 
