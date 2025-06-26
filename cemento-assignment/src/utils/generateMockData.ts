@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import type { Column, Row, TableData } from '../types';
 
-export function generateMockTableData(rowCount = 100): TableData {
+export function generateMockData(rowCount = 100): TableData { // Generates mock data for a table with specified number of rows
   const columns: Column[] = [
     { id: 'name', ordinalNo: 1, title: 'Name', type: 'string' },
     { id: 'age', ordinalNo: 2, title: 'Age', type: 'number' },
