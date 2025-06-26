@@ -1,6 +1,6 @@
 export type ColumnType = 'string' | 'number' | 'boolean' | 'select';
 
-export interface Column {
+export interface Column { // Represents a column in a data table with its properties
   id: string;
   ordinalNo: number;
   title: string;
@@ -9,12 +9,12 @@ export interface Column {
   options?: string[]; // for 'select' only
 }
 
-export interface Row {
+export interface Row { // Represents a row in a data table, containing data for each column
   id: string;
   [key: string]: any;
 }
 
-export interface TableData {
+export interface TableData { // Represents the complete data structure for a table, including columns and rows
   columns: Column[];
   data: Row[];
 }
