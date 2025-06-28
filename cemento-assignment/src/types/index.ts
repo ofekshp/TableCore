@@ -8,6 +8,7 @@ export interface Column {
   type: ColumnType;
   width?: number;
   options?: string[]; // for 'select' only
+  visible?: boolean;
 }
 
 export interface Row {
