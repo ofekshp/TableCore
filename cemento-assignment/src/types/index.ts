@@ -8,12 +8,17 @@ export interface Column {
   type: ColumnType;
   width?: number;
   options?: string[]; // for 'select' only
+  visible?: boolean;
 }
 
 export interface Row {
-  // Represents a row in a data table, containing data for each column
   id: string;
-  [key: string]: any;
+  name?: string;
+  age?: number;
+  isActive?: boolean;
+  role?: string;
+  note?: string;
+  [key: string]: any; // Keep this for future extensibility
 }
 
 export interface TableData {
