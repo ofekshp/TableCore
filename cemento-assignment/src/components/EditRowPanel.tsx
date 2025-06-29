@@ -51,8 +51,8 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
       if (col.type === "number") {
         if (val === "" || val === null || isNaN(val)) {
           newErrors[col.id] = "This field is required";
-        } else if (val < 0 || val > 140) {
-          newErrors[col.id] = "Age must be between 0-140";
+        } else if (val < 1 || val > 140) {
+          newErrors[col.id] = "Age must be between 1-140";
         }
       }
 

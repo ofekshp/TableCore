@@ -6,6 +6,7 @@ import { CSVLink } from "react-csv";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import NotePanel from "./NotePanel";
+const PAGE_DELTA = 3;
 
 const downloadPDF = (rows: Row[], columns: Column[]) => {
   const doc = new jsPDF();
@@ -129,11 +130,6 @@ export const DataTableContainer = ({ columns, data }: Props) => {
     );
   };
 
-  const enrichedColumns = columns.map((col) => ({
-    ...col,
-    visible: visibleColumns.includes(col.id),
-  }));
-
   const exportColumns: Column[] = [
     ...columns,
     {
@@ -145,15 +141,22 @@ export const DataTableContainer = ({ columns, data }: Props) => {
     },
   ];
 
+  const enrichedColumns = columns.map((c) => ({
+    ...c,
+    visible: visibleColumns.includes(c.id),
+  }));
+
+  // Sort only the data, based on sortColumn/sortOrder
   let sortedData = [...tableData];
   if (sortColumn) {
     const meta = enrichedColumns.find((c) => c.id === sortColumn)!;
     sortedData.sort((a, b) => {
-      const va = a[sortColumn];
-      const vb = b[sortColumn];
-      if (meta.type === "number")
+      const va = a[sortColumn],
+        vb = b[sortColumn];
+      if (meta.type === "number") {
         return sortOrder === "asc" ? va - vb : vb - va;
-      if (meta.type === "boolean")
+      }
+      if (meta.type === "boolean") {
         return sortOrder === "asc"
           ? va === vb
             ? 0
@@ -165,6 +168,7 @@ export const DataTableContainer = ({ columns, data }: Props) => {
           : va
           ? 1
           : -1;
+      }
       return sortOrder === "asc"
         ? String(va).localeCompare(String(vb))
         : String(vb).localeCompare(String(va));
@@ -242,20 +246,47 @@ export const DataTableContainer = ({ columns, data }: Props) => {
         onNoteClick={(row) => setNoteRow(row)}
       />
 
-      <div className="flex justify-center mt-4 gap-2">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 rounded border text-sm ${
-              currentPage === i + 1
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700"
-            } hover:bg-blue-100`}
-          >
-            {i + 1}
-          </button>
-        ))}
+      <div className="flex justify-center items-center mt-4 gap-2">
+        {/* Prev */}
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.max(1, prev - PAGE_DELTA))
+          }
+          disabled={currentPage <= 1}
+          className="px-2 py-1 rounded bg-white text-blue-700 border hover:bg-blue-100 disabled:opacity-50"
+        >
+          ←
+        </button>
+
+        {Array.from({ length: PAGE_DELTA }, (_, i) => {
+          const page =
+            Math.floor((currentPage - 1) / PAGE_DELTA) * PAGE_DELTA + i + 1;
+          if (page > totalPages) return null;
+          return (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1 rounded border text-sm ${
+                currentPage === page
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-blue-100"
+              }`}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        {/* Next */}
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(totalPages, prev + PAGE_DELTA))
+          }
+          disabled={currentPage + PAGE_DELTA > totalPages}
+          className="px-2 py-1 rounded bg-white text-blue-700 border hover:bg-blue-100 disabled:opacity-50"
+        >
+          →
+        </button>
       </div>
 
       {editingRow && (

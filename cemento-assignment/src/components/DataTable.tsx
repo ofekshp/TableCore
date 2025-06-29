@@ -45,7 +45,7 @@ export const DataTable = ({
 
   return (
     <div className="relative max-h-[1000vh] overflow-auto border rounded-md shadow">
-      <table className="min-w-full border-collapse">
+      <table className="min-w-full border-collapse table-fixed">
         <thead className="sticky top-0 bg-blue-100 z-10">
           <tr>
             <th className="text-center px-2 py-2 border-b font-semibold text-sm text-gray-700 w-10">
@@ -54,8 +54,8 @@ export const DataTable = ({
             {columns.map((column) => (
               <th
                 key={column.id}
-                style={{ width: column.width }}
-                className="px-4 py-2 border-b font-semibold text-sm text-gray-700"
+                style={{ width: column.width || "150px" }} // fixed width fallback
+                className="px-4 py-2 border-b font-semibold text-sm text-gray-700 whitespace-nowrap"
               >
                 <div className="flex items-center gap-2">
                   <button
@@ -92,53 +92,63 @@ export const DataTable = ({
               {columns.map((col) => (
                 <td
                   key={col.id}
-                  className={`px-4 py-2 border-b text-gray-800 ${
+                  className={`px-4 py-2 border-b text-gray-800 whitespace-nowrap ${
                     col.visible ? "" : "opacity-0"
                   }`}
+                  style={{ width: col.width || "150px" }}
                 >
                   {renderCell(row[col.id], col)}
                 </td>
               ))}
-              <td className="px-2 py-2 border-b text-center relative flex justify-center items-center gap-2">
-                <div className="relative group">
-                  <button
-                    onDoubleClick={() => onNoteClick(row)}
-                    className="text-xl hover:scale-110 transition-transform duration-150"
-                  >
-                    {row.note?.trim() ? "🗒️" : "📝"}
-                  </button>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-black text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20">
-                    Note
+              <td className="border-b text-center relative">
+                <div className="flex items-center justify-center gap-1 px-1 py-1">
+                  {/* Note Button with Tooltip */}
+                  <div className="relative group mr-4">
+                    <button
+                      onClick={() => onNoteClick(row)}
+                      className="text-xl hover:scale-110 transition-transform duration-150"
+                    >
+                      {row.note?.trim() ? "🗒️" : "📝"}
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-black text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20">
+                      Note
+                    </div>
+                  </div>
+
+                  {/* Menu Toggle Button */}
+                  <div className="relative">
+                    <button
+                      onClick={() =>
+                        setMenuOpenId(menuOpenId === row.id ? null : row.id)
+                      }
+                      className="text-lg hover:text-blue-700 font-bold"
+                      title="More actions"
+                    >
+                      ⋮
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {menuOpenId === row.id && (
+                      <div
+                        ref={menuRef}
+                        className="absolute right-[calc(100%+60px)] top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-md shadow-md w-24 text-sm z-10"
+                      >
+                        <button
+                          onClick={() => onEditRow(row)}
+                          className="w-full text-left px-2 py-1 hover:bg-blue-50 truncate"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => setRowToDelete(row)}
+                          className="w-full text-left px-2 py-1 text-red-600 hover:bg-red-50 truncate"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={() =>
-                    setMenuOpenId(menuOpenId === row.id ? null : row.id)
-                  }
-                  className="hover:text-blue-700 font-bold text-lg"
-                  title="More actions"
-                >
-                  ⋮
-                </button>
-                {menuOpenId === row.id && (
-                  <div
-                    ref={menuRef}
-                    className="absolute right-full top-1/2 -translate-y-1/2 mr-2 bg-white border rounded shadow z-10 w-24"
-                  >
-                    <button
-                      onClick={() => onEditRow(row)}
-                      className="w-full text-left px-3 py-2 hover:bg-blue-50"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => setRowToDelete(row)}
-                      className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                )}
               </td>
             </tr>
           ))}
