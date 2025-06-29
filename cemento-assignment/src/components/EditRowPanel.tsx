@@ -15,7 +15,6 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
   columns,
   onSave,
   onCancel,
-  onDelete,
   isNew,
 }) => {
   const [editedRow, setEditedRow] = useState<Row>({ ...row });
@@ -167,14 +166,6 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
         ))}
 
         <div className="flex justify-end gap-3 pt-4">
-          {!isNew && (
-            <button
-              onClick={() => onDelete(row.id)}
-              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-            >
-              Delete
-            </button>
-          )}
           <button
             onClick={onCancel}
             className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"

@@ -5,31 +5,36 @@ import EditRowPanel from "./EditRowPanel";
 import { CSVLink } from "react-csv";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
-const downloadCSV = (rows: Row[], columns: Column[]) => {
-  const headers = columns.map((c) => ({ label: c.title, key: c.id }));
-  const data = rows.map((r) => {
-    const obj: any = {};
-    columns.forEach((c) => (obj[c.id] = r[c.id]));
-    return obj;
-  });
-  return (
-    <CSVLink
-      data={data}
-      headers={headers}
-      filename="Cemento-Table.csv"
-      className="px-3 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 text-sm shadow"
-    >
-      📥 Export CSV
-    </CSVLink>
-  );
-};
+import NotePanel from "./NotePanel";
 
 const downloadPDF = (rows: Row[], columns: Column[]) => {
   const doc = new jsPDF();
+
   const headers = [columns.map((c) => c.title)];
   const data = rows.map((r) => columns.map((c) => String(r[c.id])));
-  autoTable(doc, { head: headers, body: data });
+
+  const columnStyles: Record<number, any> = {};
+  const noteIndex = columns.findIndex((c) => c.id === "note");
+
+  if (noteIndex !== -1) {
+    columnStyles[noteIndex] = {
+      cellWidth: 60, // constrain width
+      halign: "left",
+      valign: "top",
+    };
+  }
+
+  autoTable(doc, {
+    head: headers,
+    body: data,
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      overflow: "linebreak",
+    },
+    columnStyles,
+  });
+
   doc.save("Cemento-Table.pdf");
 };
 
@@ -46,38 +51,27 @@ export const DataTableContainer = ({ columns, data }: Props) => {
   } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 20;
+  const [noteRow, setNoteRow] = useState<Row | null>(null);
+  const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
 
   const handleDelete = (rowId: string) => {
     const updatedData = tableData.filter((row) => row.id !== rowId);
     setTableData(updatedData);
     setEditingRow(null);
-
-    const updatedTable = { columns, data: updatedData };
-    sessionStorage.setItem("tableData", JSON.stringify(updatedTable));
+    sessionStorage.setItem(
+      "tableData",
+      JSON.stringify({ columns, data: updatedData })
+    );
   };
 
-  const [sortColumn, setSortColumn] = useState<string | null>(() => {
-    const storedSort = sessionStorage.getItem("sortColumn");
-    return storedSort ? storedSort : null;
-  });
-
-  const [nextId, setNextId] = useState<number>(() => {
-    const stored = sessionStorage.getItem("nextRowId");
-    if (stored) return Number(stored);
-    return data.length + 1;
-  });
-
-  const handleAddRow = () => {
-    const newRow = createRow(columns, nextId);
-    setEditingRow({ row: newRow, isNew: true });
-    setNextId((prev) => prev + 1);
-  };
-
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() => {
-    const storedOrder = sessionStorage.getItem("sortOrder");
-    return storedOrder === "desc" ? "desc" : "asc";
-  });
-
+  const [sortColumn, setSortColumn] = useState<string | null>(
+    () => sessionStorage.getItem("sortColumn") || null
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() =>
+    sessionStorage.getItem("sortOrder") === "desc" ? "desc" : "asc"
+  );
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
     const stored = sessionStorage.getItem("visibleColumns");
     return stored ? JSON.parse(stored) : columns.map((c) => c.id);
@@ -87,19 +81,16 @@ export const DataTableContainer = ({ columns, data }: Props) => {
     sessionStorage.setItem("visibleColumns", JSON.stringify(visibleColumns));
     if (sortColumn) sessionStorage.setItem("sortColumn", sortColumn);
     sessionStorage.setItem("sortOrder", sortOrder);
-    sessionStorage.setItem("nextRowId", String(nextId));
-  }, [visibleColumns, sortColumn, sortOrder, nextId]);
+  }, [visibleColumns, sortColumn, sortOrder]);
 
   const handleSave = (updatedRow: Row, isNew: boolean) => {
     const updatedData = isNew
       ? [...tableData, updatedRow]
       : tableData.map((r) => (r.id === updatedRow.id ? updatedRow : r));
-
     setTableData(updatedData);
     setEditingRow(null);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
-
     sessionStorage.setItem(
       "tableData",
       JSON.stringify({ columns, data: updatedData })
@@ -115,17 +106,51 @@ export const DataTableContainer = ({ columns, data }: Props) => {
     }
   };
 
+  const createRow = (columns: Column[]): Row => {
+    const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const empty: Row = { id: uniqueId };
+    columns.forEach((col) => {
+      if (col.type === "boolean") empty[col.id] = false;
+      else empty[col.id] = "";
+    });
+    return empty;
+  };
+
+  const handleNoteSave = (note: string) => {
+    if (!noteRow) return;
+    const updatedData = tableData.map((r) =>
+      r.id === noteRow.id ? { ...r, note } : r
+    );
+    setTableData(updatedData);
+    setNoteRow(null);
+    sessionStorage.setItem(
+      "tableData",
+      JSON.stringify({ columns, data: updatedData })
+    );
+  };
+
   const enrichedColumns = columns.map((col) => ({
     ...col,
     visible: visibleColumns.includes(col.id),
   }));
 
+  const exportColumns: Column[] = [
+    ...columns,
+    {
+      id: "note",
+      title: "Note",
+      type: "string",
+      ordinalNo: columns.length + 1,
+      visible: true,
+    },
+  ];
+
   let sortedData = [...tableData];
   if (sortColumn) {
     const meta = enrichedColumns.find((c) => c.id === sortColumn)!;
     sortedData.sort((a, b) => {
-      const va = a[sortColumn],
-        vb = b[sortColumn];
+      const va = a[sortColumn];
+      const vb = b[sortColumn];
       if (meta.type === "number")
         return sortOrder === "asc" ? va - vb : vb - va;
       if (meta.type === "boolean")
@@ -146,18 +171,13 @@ export const DataTableContainer = ({ columns, data }: Props) => {
     });
   }
 
-  const createRow = (columns: Column[], id: number): Row => {
-    const empty: Row = { id: String(id) };
-    columns.forEach((col) => {
-      if (col.type === "boolean") empty[col.id] = false;
-      else if (col.type === "select") empty[col.id] = "";
-      else empty[col.id] = "";
-    });
-    return empty;
-  };
-
   const filteredData = sortedData.filter((row) =>
     row.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
 
   return (
@@ -167,32 +187,44 @@ export const DataTableContainer = ({ columns, data }: Props) => {
           type="text"
           placeholder="Search by name..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
           className="border px-3 py-2 rounded-md w-64 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
         />
-
-        <div className="flex items-center gap-2">
-          {downloadCSV(filteredData, enrichedColumns)}
+        <div className="flex gap-2">
+          <CSVLink
+            data={filteredData}
+            headers={exportColumns.map((c) => ({ label: c.title, key: c.id }))}
+            filename="Cemento-Table.csv"
+            className="px-3 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 text-sm shadow"
+          >
+            📥 Export CSV
+          </CSVLink>
 
           <button
-            onClick={() => downloadPDF(filteredData, enrichedColumns)}
+            onClick={() => downloadPDF(filteredData, exportColumns)}
             className="px-3 py-2 rounded bg-orange-600 text-white hover:bg-orange-700 text-sm shadow"
           >
             📄 Export PDF
           </button>
 
           <button
-            onClick={handleAddRow}
+            onClick={() =>
+              setEditingRow({ row: createRow(columns), isNew: true })
+            }
             className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 text-sm shadow"
           >
             ➕ Add
           </button>
         </div>
       </div>
+
       <DataTable
         columns={enrichedColumns}
-        data={filteredData}
-        onRowDoubleClick={(row) => setEditingRow({ row, isNew: false })}
+        data={paginatedData}
+        onEditRow={(row) => setEditingRow({ row, isNew: false })}
         onSort={handleSort}
         sortColumn={sortColumn ?? undefined}
         sortOrder={sortOrder}
@@ -204,12 +236,27 @@ export const DataTableContainer = ({ columns, data }: Props) => {
           );
         }}
         onAddNewRow={() =>
-          setEditingRow({
-            row: createRow(columns, tableData.length),
-            isNew: true,
-          })
+          setEditingRow({ row: createRow(columns), isNew: true })
         }
+        setRowToDelete={setRowToDelete}
+        onNoteClick={(row) => setNoteRow(row)}
       />
+
+      <div className="flex justify-center mt-4 gap-2">
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentPage(i + 1)}
+            className={`px-3 py-1 rounded border text-sm ${
+              currentPage === i + 1
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-700"
+            } hover:bg-blue-100`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
 
       {editingRow && (
         <EditRowPanel
@@ -222,9 +269,49 @@ export const DataTableContainer = ({ columns, data }: Props) => {
         />
       )}
 
+      {noteRow && (
+        <NotePanel
+          row={noteRow}
+          onCancel={() => setNoteRow(null)}
+          onSave={(note) => handleNoteSave(note)}
+        />
+      )}
+
       {showSuccess && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-full shadow-lg animate-fadeIn z-50">
           Data changed successfully
+        </div>
+      )}
+
+      {rowToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[320px] space-y-5 text-center">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Are you sure you want to delete
+              <br />
+              <span className="text-red-600 font-bold">
+                "{rowToDelete.name}"
+              </span>
+              ?
+            </h3>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  handleDelete(rowToDelete.id);
+                  setRowToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Yes, Delete
+              </button>
+              <button
+                onClick={() => setRowToDelete(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
