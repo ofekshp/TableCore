@@ -250,7 +250,7 @@ export const DataTableContainer = ({ columns, data }: Props) => {
         {/* Prev */}
         <button
           onClick={() =>
-            setCurrentPage((prev) => Math.max(1, prev - PAGE_DELTA))
+            setCurrentPage((prev) => Math.max(1, currentPage - 1))
           }
           disabled={currentPage <= 1}
           className="px-2 py-1 rounded bg-white text-blue-700 border hover:bg-blue-100 disabled:opacity-50"
@@ -280,9 +280,9 @@ export const DataTableContainer = ({ columns, data }: Props) => {
         {/* Next */}
         <button
           onClick={() =>
-            setCurrentPage((prev) => Math.min(totalPages, prev + PAGE_DELTA))
+            setCurrentPage((prev) => Math.min(totalPages, 1 + currentPage))
           }
-          disabled={currentPage + PAGE_DELTA > totalPages}
+          disabled={currentPage + 1 > totalPages}
           className="px-2 py-1 rounded bg-white text-blue-700 border hover:bg-blue-100 disabled:opacity-50"
         >
           →

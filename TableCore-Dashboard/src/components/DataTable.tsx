@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Column, Row } from "../types";
+import { MAX } from "uuid";
 
 type DataTableProps = {
   columns: Column[];
@@ -54,7 +55,7 @@ export const DataTable = ({
             {columns.map((column) => (
               <th
                 key={column.id}
-                style={{ width: column.width || "150px" }} // fixed width fallback
+                style={{ maxWidth: column.width || "15px" }} // fixed width fallback
                 className="px-4 py-2 border-b font-semibold text-sm text-gray-700 whitespace-nowrap"
               >
                 <div className="flex items-center gap-2">
@@ -95,7 +96,7 @@ export const DataTable = ({
                   className={`px-4 py-2 border-b text-gray-800 whitespace-nowrap ${
                     col.visible ? "" : "opacity-0"
                   }`}
-                  style={{ width: col.width || "150px" }}
+                  style={{ maxWidth: col.width || "15px" }}
                 >
                   {renderCell(row[col.id], col)}
                 </td>

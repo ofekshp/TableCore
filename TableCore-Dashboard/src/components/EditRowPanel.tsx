@@ -28,6 +28,7 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
   }, []);
 
   const handleChange = (columnId: string, value: any) => {
+
     setEditedRow((prev) => ({ ...prev, [columnId]: value }));
     setErrors((prev) => ({ ...prev, [columnId]: "" }));
   };
@@ -67,9 +68,9 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
 
   const handleSave = () => {
     if (!validate()) return;
-
+   
     const cleanedRow: Row = { ...editedRow };
-
+    
     columns.forEach((col) => {
       if (
         col.type === "number" &&
@@ -91,7 +92,7 @@ const EditRowPanel: React.FC<EditRowPanelProps> = ({
           <input
             type="text"
             value={value}
-            onChange={(e) => handleChange(column.id, e.target.value)}
+            onChange={(e) => handleChange(column.id, e.target.value.trim())}
             maxLength={25}
             onKeyDown={(e) => {
               if ([".", "'"].includes(e.key)) {
