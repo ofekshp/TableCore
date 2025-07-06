@@ -1,4 +1,4 @@
-# 🧱 Cemento Dashboard
+# 🧱 TableCore Dashboard
 
 A fully interactive, editable data table and analytics dashboard built with React, TypeScript, Tailwind CSS, and Chart.js. This is a frontend assignment completed with full functionality and attention to detail.
 
